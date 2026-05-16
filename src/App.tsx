@@ -47,6 +47,7 @@ export default function App() {
   const [profile, setProfile] = useState<ProApiResponse | null>(null);
   const [searchResults, setSearchResults] = useState<SearchPlayer[]>([]);
   const [detectedRegion, setDetectedRegion] = useState<string | null>(null);
+  const [checkingRegion, setCheckingRegion] = useState<string | null>(null);
 
   const regions = ["BD", "PK", "IN", "US", "ID", "TH", "VN", "RU", "EU", "ME", "BR"];
 
@@ -55,15 +56,18 @@ export default function App() {
     setError(null);
     setProfile(null);
     setDetectedRegion(null);
+    setCheckingRegion(null);
 
     // Auto-detect loop
     for (const region of regions) {
+      setCheckingRegion(region);
       try {
         const data = await getPlayerAllData(uid, region);
         if (data && data.result) {
           setProfile(data);
           setDetectedRegion(region);
           setLoading(false);
+          setCheckingRegion(null);
           return;
         }
       } catch (err) {
@@ -72,6 +76,7 @@ export default function App() {
       }
     }
 
+    setCheckingRegion(null);
     setError("Account not found. Tested all regional nodes (BD, PK, IN, US, etc.) but no data was returned. Ensure the UID is correct.");
     setLoading(false);
   };
@@ -111,30 +116,32 @@ export default function App() {
   const servers = ["BD", "US", "BR", "IN", "ID", "ME", "PK", "TH", "VN", "RU", "EU"];
 
   return (
-    <div className="min-h-screen bg-dark-surface text-white selection:bg-brand-orange selection:text-white pb-20 overflow-x-hidden">
-      {/* Background Atmosphere */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+    <div className="min-h-screen bg-dark-surface text-white selection:bg-brand-orange selection:text-white pb-20 overflow-x-hidden relative">
+      {/* Neural Background Grid */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:40px_40px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
         <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-brand-orange/5 blur-[120px] rounded-full" />
         <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-brand-yellow/5 blur-[120px] rounded-full" />
+        <div className="absolute top-0 left-0 w-full h-[1px] bg-brand-orange/20 animate-scanline"></div>
       </div>
 
       {/* Header */}
       <header className="relative z-50 p-4 md:p-6 flex flex-col lg:flex-row justify-between items-center gap-6 border-b border-white/5 bg-dark-surface/50 backdrop-blur-md sticky top-0">
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => { setProfile(null); setSearchResults([]); setError(null); }}>
-          <div className="w-10 h-10 bg-brand-orange rounded-lg flex items-center justify-center glow-orange rotate-3 group hover:rotate-0 transition-transform">
+        <div className="flex items-center gap-3 cursor-pointer group" onClick={() => { setProfile(null); setSearchResults([]); setError(null); }}>
+          <div className="w-10 h-10 bg-brand-orange rounded-lg flex items-center justify-center glow-orange rotate-3 group-hover:rotate-0 transition-all duration-500">
             <Sword className="text-white" size={24} />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-black tracking-tighter uppercase italic">
-                Fire<span className="text-brand-orange">Stats</span>
+              <h1 className="text-2xl font-black tracking-tighter uppercase italic group-hover:text-brand-orange transition-colors">
+                Fire<span className="text-brand-orange group-hover:text-white transition-colors">Stats</span>
               </h1>
               <div className="flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded-full mt-1 border border-white/5">
-                <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_5px_rgba(34,197,94,0.8)]" />
-                <span className="text-[8px] font-bold text-white/40 uppercase tracking-widest">Quantum Link</span>
+                <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.8)]" />
+                <span className="text-[8px] font-bold text-white/40 uppercase tracking-[0.2em]">Quantum Link</span>
               </div>
             </div>
-            <p className="text-[10px] uppercase tracking-widest text-white/40 font-mono">Bypass Multi-Node Tracker</p>
+            <p className="text-[10px] uppercase tracking-[0.2em] text-white/30 font-mono font-black italic">Bypass Multi-Node Tracker</p>
           </div>
         </div>
 
@@ -180,10 +187,19 @@ export default function App() {
             </div>
             <button 
               disabled={loading}
-              className="bg-brand-orange hover:bg-brand-red text-white px-8 py-2.5 rounded-xl font-bold uppercase text-xs flex items-center justify-center gap-2 transition-all glow-orange disabled:opacity-50 disabled:cursor-not-allowed group whitespace-nowrap tracking-widest shadow-lg shadow-brand-orange/30"
+              className="bg-brand-orange hover:bg-brand-red text-white px-8 py-2.5 rounded-xl font-bold uppercase text-xs flex flex-col items-center justify-center transition-all glow-orange disabled:opacity-80 disabled:cursor-not-allowed group tracking-widest shadow-lg shadow-brand-orange/30 min-w-[140px]"
             >
-              {loading ? <Loader2 className="animate-spin" size={18} /> : <Zap className="group-hover:scale-110 transition-transform" size={16} />}
-              {loading ? "Decrypting..." : "Scan Agent"}
+              {loading ? (
+                <>
+                  <Loader2 className="animate-spin mb-1" size={16} />
+                  <span className="text-[8px] animate-pulse">Scanning {checkingRegion || 'Nodes'}...</span>
+                </>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Zap className="group-hover:scale-110 transition-transform" size={16} />
+                  <span>Scan Agent</span>
+                </div>
+              )}
             </button>
           </form>
         </div>
