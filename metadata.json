@@ -1,0 +1,6 @@
+{
+  "name": "FireStats - Free Fire UID Lookup",
+  "description": "Powerful real-time Free Fire player profile and statistics lookup tool. Search by UID to view player ranks, career stats, and clan information.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["Real-time Data Fetching", "Dynamic Statistics Visualization", "Gaming HUD UI"]
+}
